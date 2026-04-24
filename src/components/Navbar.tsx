@@ -79,7 +79,7 @@ export default function Navbar() {
               </Link>
             )}
 
-            {user ? (
+            {isAdminPath && user && (
               <div className="flex items-center gap-4">
                 <span className="hidden text-xs font-bold text-gray-400 lg:inline-block">{user.email}</span>
                 <button
@@ -89,13 +89,6 @@ export default function Navbar() {
                   Logout
                 </button>
               </div>
-            ) : (
-              <Link 
-                to={isAdminPath ? "/admin/login" : "/login"} 
-                className="text-sm font-bold text-gray-900 transition-colors hover:text-black"
-              >
-                Sign In
-              </Link>
             )}
 
             {/* Mobile Toggle */}
@@ -126,7 +119,7 @@ export default function Navbar() {
                   {link.name}
                 </Link>
               ))}
-            {user && (
+            {isAdminPath && user && (
               <button
                 onClick={() => { logout(); setIsMenuOpen(false); }}
                 className="w-full rounded-2xl bg-black py-4 text-sm font-bold text-white"
