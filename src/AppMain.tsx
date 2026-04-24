@@ -60,8 +60,11 @@ export default function AppMain() {
                 />
               </Routes>
             </main>
-            <footer className="border-t border-gray-50 py-12 text-center text-sm text-gray-400">
-              {clientConfig.footerText}
+            <footer className="border-t border-gray-50 py-12 text-center flex flex-col items-center justify-center space-y-2">
+              <p className="text-sm text-gray-400">{clientConfig.footerText}</p>
+              <p className="text-xs text-gray-400">
+                Built by <a href="https://portfolio-kappa-lyart-69.vercel.app/" target="_blank" rel="noopener noreferrer" className="font-medium text-gray-500 hover:text-gray-900 transition-colors">Riya</a>
+              </p>
             </footer>
           </div>
         </CartProvider>
