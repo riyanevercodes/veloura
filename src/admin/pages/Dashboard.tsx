@@ -46,10 +46,10 @@ export default function AdminDashboard() {
   if (loading) return <div className="p-8 text-center text-gray-500">Loading stats...</div>;
 
   const cards = [
-    { label: 'Total Revenue', value: formatPrice(stats.totalRevenue), color: 'text-green-600', bg: 'bg-green-50' },
-    { label: 'Total Orders', value: stats.totalOrders, color: 'text-blue-600', bg: 'bg-blue-50' },
-    { label: 'Pending Orders', value: stats.pendingOrders, color: 'text-orange-600', bg: 'bg-orange-50' },
-    { label: 'Live Products', value: stats.totalProducts, color: 'text-purple-600', bg: 'bg-purple-50' },
+    { label: 'Total Revenue', value: formatPrice(stats.totalRevenue), color: 'text-gray-900', bg: 'bg-white' },
+    { label: 'Total Orders', value: stats.totalOrders, color: 'text-gray-900', bg: 'bg-white' },
+    { label: 'Pending Orders', value: stats.pendingOrders, color: 'text-gray-900', bg: 'bg-white' },
+    { label: 'Live Products', value: stats.totalProducts, color: 'text-gray-900', bg: 'bg-white' },
   ];
 
   return (
