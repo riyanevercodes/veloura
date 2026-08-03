@@ -17,21 +17,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check active sessions and sets the user
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    let didFinish = false;
 
-    // Listen for changes on auth state (logged in, signed out, etc.)
+    // Failsafe: never let the app hang blank for more than 6 seconds
+    const timeout = setTimeout(() => {
+      if (!didFinish) {
+        console.warn('Supabase session check timed out. Continuing without a session.');
+        setLoading(false);
+      }
+    }, 6000);
+
+    supabase.auth.getSession()
+      .then(({ data: { session } }) => {
+        didFinish = true;
+        clearTimeout(timeout);
+        setSession(session);
+        setUser(session?.user ?? null);
+        setLoading(false);
+      })
+      .catch((err) => {
+        didFinish = true;
+        clearTimeout(timeout);
+        console.error('Supabase session check failed:', err);
+        setLoading(false);
+      });
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      clearTimeout(timeout);
+      subscription.unsubscribe();
+    };
   }, []);
 
   async function logout() {
@@ -45,7 +65,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children}
+      {loading ? (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', fontFamily: 'sans-serif', color: '#666' }}>
+          Loading...
+        </div>
+      ) : (
+        children
+      )}
     </AuthContext.Provider>
   );
 }
