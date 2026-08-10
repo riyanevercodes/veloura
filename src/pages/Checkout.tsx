@@ -33,11 +33,36 @@ export default function Checkout() {
 
     setSubmitting(true);
     try {
+      // 0. Figure out which store this order actually belongs to,
+      // based on the real products in the cart (not a hardcoded config value).
+      const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      const toUUID = (id: string): string | null => UUID_RE.test(id) ? id : null;
+
+      const productIds = cartItems
+        .map((i) => toUUID(i.productId))
+        .filter((id): id is string => id !== null);
+
+      if (productIds.length === 0) {
+        throw new Error('Could not verify products in your cart. Please refresh and try again.');
+      }
+
+      const { data: productsData, error: productsLookupError } = await supabase
+        .from('products')
+        .select('id, store_id')
+        .in('id', productIds);
+
+      if (productsLookupError) throw productsLookupError;
+      if (!productsData || productsData.length === 0) {
+        throw new Error('Could not find the store for these products. Please refresh and try again.');
+      }
+
+      const storeId = productsData[0].store_id;
+
       // 1. Insert Order
       const { data: order, error: orderError } = await supabase
         .from('orders')
         .insert({
-          store_id: clientConfig.defaultStoreId, // Reserved for Phase 3
+          store_id: storeId,
           customer_name: form.name,
           phone: form.phone,
           address: form.address,
@@ -51,9 +76,6 @@ export default function Checkout() {
 
       // 2. Insert Order Items
       // Guard: product_id must be a valid UUID or null (old cart items may have slug-style ids)
-      const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-      const toUUID = (id: string): string | null => UUID_RE.test(id) ? id : null;
-
       const orderItems = cartItems.map((i) => ({
         order_id: order.id,
         product_id: toUUID(i.productId),

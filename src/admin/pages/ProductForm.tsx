@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
-import { clientConfig } from '../../config/client.config';
 
 export default function AdminProductForm() {
   const { id } = useParams();
@@ -18,12 +17,29 @@ export default function AdminProductForm() {
   });
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(isEdit);
+  const [storeId, setStoreId] = useState<string | null>(null);
 
   useEffect(() => {
+    fetchMyStoreId();
     if (isEdit) {
       fetchProduct();
     }
   }, [id]);
+
+  async function fetchMyStoreId() {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from('stores')
+      .select('id')
+      .eq('owner_id', user.id)
+      .single();
+
+    if (!error && data) {
+      setStoreId(data.id);
+    }
+  }
 
   async function fetchProduct() {
     const { data, error } = await supabase
@@ -47,10 +63,16 @@ export default function AdminProductForm() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
+    if (!storeId) {
+      alert('Could not find your store. Please try refreshing the page.');
+      return;
+    }
+
     setLoading(true);
 
     const productData = {
-      store_id: clientConfig.defaultStoreId,
+      store_id: storeId,
       title: form.title,
       price: parseFloat(form.price),
       category: form.category,

@@ -8,5 +8,5 @@ export const clientConfig = {
   logoUrl: '', // Keep empty for text-logo (more premium than a broken image)
   footerText: '© 2025 Veloura Essentials. Crafted for quality.',
   currency: 'INR',
-  defaultStoreId: '00000000-0000-0000-0000-000000000000'
+  defaultStoreId: '6994a030-0b1d-41ee-8f4d-92f16aa49237'
 };
