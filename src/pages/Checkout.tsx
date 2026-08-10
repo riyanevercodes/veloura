@@ -59,25 +59,29 @@ export default function Checkout() {
       const storeId = productsData[0].store_id;
 
       // 1. Insert Order
-      const { data: order, error: orderError } = await supabase
+      // Generate the order id ourselves so we don't need to read the row back
+      // afterward — guests aren't allowed to SELECT from orders (by design,
+      // so random people can't browse other customers' names/addresses).
+      const orderId = crypto.randomUUID();
+
+      const { error: orderError } = await supabase
         .from('orders')
         .insert({
+          id: orderId,
           store_id: storeId,
           customer_name: form.name,
           phone: form.phone,
           address: form.address,
           total_amount: totalPrice,
           status: 'pending',
-        })
-        .select()
-        .single();
+        });
 
       if (orderError) throw orderError;
 
       // 2. Insert Order Items
       // Guard: product_id must be a valid UUID or null (old cart items may have slug-style ids)
       const orderItems = cartItems.map((i) => ({
-        order_id: order.id,
+        order_id: orderId,
         product_id: toUUID(i.productId),
         product_title: i.name,
         product_price: i.price,
@@ -96,12 +100,12 @@ export default function Checkout() {
       
       // Construct WhatsApp message
       const itemsList = cartItems.map(i => `${i.name} x${i.quantity}`).join(', ');
-      const waMsg = `Hello! I placed an order on ${clientConfig.storeName}. Order ID: #${order.id.slice(0, 8)} | Items: [${itemsList}] | Total: ${formatPrice(totalPrice)} | Address: ${form.address} | Phone: ${form.phone}`;
+      const waMsg = `Hello! I placed an order on ${clientConfig.storeName}. Order ID: #${orderId.slice(0, 8)} | Items: [${itemsList}] | Total: ${formatPrice(totalPrice)} | Address: ${form.address} | Phone: ${form.phone}`;
       const waUrl = `https://wa.me/${clientConfig.whatsappNumber}?text=${encodeURIComponent(waMsg)}`;
 
-      navigate(`/order-confirmation/${order.id}`, { 
+      navigate(`/order-confirmation/${orderId}`, { 
         state: { 
-          orderId: order.id, 
+          orderId: orderId, 
           waUrl,
           customerName: form.name 
         } 
